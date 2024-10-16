@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "420506548159",
+    "firebase_url": "https://chatappjava-b3384-default-rtdb.firebaseio.com",
+    "project_id": "chatappjava-b3384",
+    "storage_bucket": "chatappjava-b3384.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:420506548159:android:11221847ead2010f04530a",
+        "android_client_info": {
+          "package_name": "com.av.avmessenger"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBQNMRcvJKa6YI0b02kekVg6LfT2sYFAHQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
