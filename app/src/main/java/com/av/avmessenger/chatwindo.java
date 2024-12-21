@@ -40,21 +40,23 @@ import kyber.CRYSTALS_KYBER.EncapsulationResult;
 import kyber.Rq;
 
 public class chatwindo extends AppCompatActivity {
+    // Declaring variables for various UI components and logic
     String reciverimg, reciverUid, reciverName, SenderUID;
-    CircleImageView profile;
-    TextView reciverNName;
-    FirebaseDatabase database;
-    FirebaseAuth firebaseAuth;
-    public static String senderImg;
-    public static String reciverIImg;
-    CardView sendbtn;
-    EditText textmsg;
-    String senderRoom, reciverRoom;
-    RecyclerView messageAdpter;
-    ArrayList<msgModelclass> messagesArrayList;
-    messagesAdpter mmessagesAdpter;
-    private CRYSTALS_KYBER kyber;
+    CircleImageView profile; // UI component to display the profile image
+    TextView reciverNName;   // UI component to display receiver's name
+    FirebaseDatabase database; // Firebase database instance
+    FirebaseAuth firebaseAuth; // Firebase authentication instance
+    public static String senderImg; // Sender's image URL
+    public static String reciverIImg; // Receiver's image URL
+    CardView sendbtn; // Send button in the chat
+    EditText textmsg; // Input field for typing messages
+    String senderRoom, reciverRoom; // Unique chat room identifiers for sender and receiver
+    RecyclerView messageAdpter; // RecyclerView for displaying chat messages
+    ArrayList<msgModelclass> messagesArrayList; // List of messages
+    messagesAdpter mmessagesAdpter; // Adapter for RecyclerView
+    private CRYSTALS_KYBER kyber; // Instance of the CRYSTALS-KYBER encryption algorithm
 
+    // Utility method to convert a List of Integers to a byte array
     public static byte[] listToByteArray(List<Integer> list) {
         byte[] byteArray = new byte[list.size()];
         for (int i = 0; i < list.size(); i++) {
@@ -63,52 +65,55 @@ public class chatwindo extends AppCompatActivity {
         return byteArray;
     }
 
-
-
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_chatwindo);
-        getSupportActionBar().hide();
-        database = FirebaseDatabase.getInstance();
-        firebaseAuth = FirebaseAuth.getInstance();
-        kyber = new CRYSTALS_KYBER(256, 3, 3329);
+        setContentView(R.layout.activity_chatwindo); // Set the layout for the activity
+        getSupportActionBar().hide(); // Hide the action bar
+        database = FirebaseDatabase.getInstance(); // Initialize Firebase database instance
+        firebaseAuth = FirebaseAuth.getInstance(); // Initialize Firebase authentication instance
+        kyber = new CRYSTALS_KYBER(256, 3, 3329); // Initialize CRYSTALS-KYBER with specific parameters
 
+        // Retrieve data from the Intent
         reciverName = getIntent().getStringExtra("nameeee");
         reciverimg = getIntent().getStringExtra("reciverImg");
         reciverUid = getIntent().getStringExtra("uid");
 
-        messagesArrayList = new ArrayList<>();
+        messagesArrayList = new ArrayList<>(); // Initialize the messages list
 
+        // Initialize UI components
         sendbtn = findViewById(R.id.sendbtnn);
         textmsg = findViewById(R.id.textmsg);
         reciverNName = findViewById(R.id.recivername);
         profile = findViewById(R.id.profileimgg);
         messageAdpter = findViewById(R.id.msgadpter);
 
+        // Set up the RecyclerView
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
-        linearLayoutManager.setStackFromEnd(true);
+        linearLayoutManager.setStackFromEnd(true); // Stack messages from the end
         messageAdpter.setLayoutManager(linearLayoutManager);
         mmessagesAdpter = new messagesAdpter(chatwindo.this, messagesArrayList);
         messageAdpter.setAdapter(mmessagesAdpter);
 
+        // Load receiver's profile image using Picasso library
         Picasso.get().load(reciverimg).into(profile);
-        reciverNName.setText(reciverName);
+        reciverNName.setText(reciverName); // Set receiver's name in the TextView
 
-        SenderUID = firebaseAuth.getUid();
-        senderRoom = SenderUID + reciverUid;
-        reciverRoom = reciverUid + SenderUID;
+        SenderUID = firebaseAuth.getUid(); // Get the current user's UID
+        senderRoom = SenderUID + reciverUid; // Create a unique room ID for sender
+        reciverRoom = reciverUid + SenderUID; // Create a unique room ID for receiver
 
+        // Database references for user and chat messages
         DatabaseReference reference = database.getReference().child("user").child(firebaseAuth.getUid());
         DatabaseReference chatreference = database.getReference().child("chats").child(senderRoom).child("messages");
 
+        // Listen for changes in the chat messages
         chatreference.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
-                messagesArrayList.clear();
+                messagesArrayList.clear(); // Clear the messages list
                 for (DataSnapshot dataSnapshot : snapshot.getChildren()) {
-                    msgModelclass messages = dataSnapshot.getValue(msgModelclass.class);
+                    msgModelclass messages = dataSnapshot.getValue(msgModelclass.class); // Deserialize message
 
                     // Skip decryption if the message was sent by the current user
                     if (messages.getSenderid().equals(SenderUID)) {
@@ -118,41 +123,40 @@ public class chatwindo extends AppCompatActivity {
                     }
 
                     try {
+                        // Retrieve private key from local storage
                         byte[] privateKey = retrievePrivateKey();
-                        Rq[] privateKeyRqArray=kyber.convertBytesToRqArray(privateKey);
+                        Rq[] privateKeyRqArray = kyber.convertBytesToRqArray(privateKey);
+
+                        // Convert message components back to Rq format
                         byte[] uBytesArray = listToByteArray(messages.getU());
                         byte[] vBytesArray = listToByteArray(messages.getV());
-
-
 
                         Rq[] uRqArray = kyber.convertBytesToRqArray(uBytesArray);
                         Rq vRq = kyber.convertBytesToRq(vBytesArray);
 
-
+                        // Perform decapsulation to retrieve session key and IV
                         byte[] combinedKeyAndIV = kyber.decapsulate(privateKeyRqArray, uRqArray, vRq);
                         Log.d("Decryption", "keyAndIV (Base64): " + Base64.encodeToString(combinedKeyAndIV, Base64.DEFAULT));
-                        Log.d("Decryption", "keyAndIV  len(Base64): " + combinedKeyAndIV.length);
 
-
+                        // Split combined key and IV into separate arrays
                         byte[] decryptedSessionKeyBytes = Arrays.copyOfRange(combinedKeyAndIV, 0, 32);
                         byte[] decryptedSessionIV = Arrays.copyOfRange(combinedKeyAndIV, 32, 48);
-                        Log.d("Decryption", "Session IV (Base64): " + Base64.encodeToString(decryptedSessionIV, Base64.DEFAULT));
-                        Log.d("Decryption", "Session IV len (Base64): " + decryptedSessionIV.length);
 
+                        // Log decrypted session key and IV
                         Log.d("Decryption", "Session Key (Base64): " + Base64.encodeToString(decryptedSessionKeyBytes, Base64.DEFAULT));
-                        Log.d("Decryption", "Session Key len (Base64): " + decryptedSessionKeyBytes.length);
                         SecretKey sessionKey = new SecretKeySpec(decryptedSessionKeyBytes, "AES");
 
+                        // Decrypt the message
                         String decryptedMessage = AESHelper.decrypt(messages.getMessage(), sessionKey, decryptedSessionIV);
-                        messages.setMessage(decryptedMessage);
+                        messages.setMessage(decryptedMessage); // Update message content
 
                     } catch (Exception e) {
                         Log.e("ChatWindow", "Decryption failed: " + e.getMessage());
                     }
 
-                    messagesArrayList.add(messages);
+                    messagesArrayList.add(messages); // Add message to the list
                 }
-                mmessagesAdpter.notifyDataSetChanged();
+                mmessagesAdpter.notifyDataSetChanged(); // Notify adapter to refresh RecyclerView
             }
 
             @Override
@@ -161,6 +165,7 @@ public class chatwindo extends AppCompatActivity {
             }
         });
 
+        // Listen for changes in user profile
         reference.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
@@ -179,29 +184,26 @@ public class chatwindo extends AppCompatActivity {
             }
         });
 
+        // Handle send button click
         sendbtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                String message = textmsg.getText().toString();
+                String message = textmsg.getText().toString(); // Get message text
                 if (message.isEmpty()) {
                     Toast.makeText(chatwindo.this, "Enter message first", Toast.LENGTH_SHORT).show();
                     return;
                 }
-                textmsg.setText("");
+                textmsg.setText(""); // Clear input field
 
                 SecretKey sessionKey;
                 byte[] sessionKeyBytes;
                 byte[] sessionIV;
 
                 try {
+                    // Generate session key and IV for AES encryption
                     sessionKey = AESHelper.generateKey();
                     sessionKeyBytes = sessionKey.getEncoded();
                     sessionIV = AESHelper.generateIV();
-                    Log.d("Encryption", "Session IV (Base64): " + Base64.encodeToString(sessionIV, Base64.DEFAULT));
-                    Log.d("Encryption", "Session Key (Base64): " + Base64.encodeToString(sessionKey.getEncoded(), Base64.DEFAULT));
-                    Log.d("Encryption", "Session IV len (Base64): " + sessionIV.length);
-                    Log.d("Encryption", "Session Key len (Base64): " + sessionKeyBytes.length);
-
                 } catch (Exception e) {
                     Log.e("ChatWindow", "Key generation failed: " + e.getMessage());
                     Toast.makeText(chatwindo.this, "Failed to generate keys.", Toast.LENGTH_SHORT).show();
@@ -211,42 +213,28 @@ public class chatwindo extends AppCompatActivity {
                 database.getReference().child("user").child(reciverUid).addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
                     public void onDataChange(@NonNull DataSnapshot snapshot) {
+                        // Retrieve receiver's public key and matrixA from database
                         String publicKeyJson = snapshot.child("publicKeyJson").getValue(String.class);
                         String matrixAJson = snapshot.child("matrixAJson").getValue(String.class);
                         Gson gson = new Gson();
                         List<Rq> publicKeyList = gson.fromJson(publicKeyJson, new com.google.gson.reflect.TypeToken<List<Rq>>(){}.getType());
                         List<List<Rq>> matrixAList = gson.fromJson(matrixAJson, new com.google.gson.reflect.TypeToken<List<List<Rq>>>(){}.getType());
-                        //Rq[] publicKeyArray = gson.fromJson(publicKeyJson, Rq[].class); // Deserialize publicKeyJson to an array of Rq
-                        //Rq[][] matrixAArray = gson.fromJson(matrixAJson, Rq[][].class); // Deserialize matrixAJson to a 2D array of Rq
                         Rq[] publicKeyArray = publicKeyList.toArray(new Rq[0]);
                         Rq[][] matrixAArray = new Rq[matrixAList.size()][];
                         for (int i = 0; i < matrixAList.size(); i++) {
                             matrixAArray[i] = matrixAList.get(i).toArray(new Rq[0]);
                         }
-                        //byte[] publicKey = new Gson().fromJson(publicKeyJson, byte[].class);
-                        //byte[][] matrixA = new Gson().fromJson(matrixAJson, byte[][].class);
 
+                        // Prepare key and IV for encapsulation
                         byte[] keyAndIV = new byte[sessionKeyBytes.length + sessionIV.length];
-//                        System.arraycopy(sessionKey.getEncoded(), 0, keyAndIV, 0, sessionKey.getEncoded().length);
-//                        System.arraycopy(sessionIV, 0, keyAndIV, sessionKey.getEncoded().length, sessionIV.length);
-                        System.arraycopy(sessionKeyBytes, 0, keyAndIV, 0, 32);  // Copy session key into first 32 bytes of keyAndIV
-                        System.arraycopy(sessionIV, 0, keyAndIV, 32, 16);               // Copy IV into the next 16 bytes of keyAndIV
-                        Log.d("Encryption", "keyAndIV (Base64): " + Base64.encodeToString(keyAndIV, Base64.DEFAULT));
-                        Log.d("Encryption", "keyAndIV len(Base64): " + keyAndIV.length);
+                        System.arraycopy(sessionKeyBytes, 0, keyAndIV, 0, 32); // Copy session key
+                        System.arraycopy(sessionIV, 0, keyAndIV, 32, 16); // Copy IV
 
-// Convert byte[] publicKey and matrixA to Rq[] or Rq[][] as needed
-                        //Rq[] publicKeyRqArray = kyber.convertBytesToRqArray(publicKey);
-                        //Rq[][] matrixARqArray = new Rq[matrixA.length][];
-//                        for (int i = 0; i < matrixA.length; i++) {
-//                            matrixARqArray[i] = kyber.convertBytesToRqArray(matrixA[i]);
-//                        }
+                        EncapsulationResult encapsulationResult = kyber.encapsulate(publicKeyArray, matrixAArray, keyAndIV);
 
-// Prepare encapsulation
-                            EncapsulationResult encapsulationResult = kyber.encapsulate(publicKeyArray, matrixAArray, keyAndIV);
-
-// Get byte[] from encapsulation results for storage/transmission
-                        byte[] uBytes = encapsulationResult.getU(); // getU() will convert Rq[] to byte[]
-                        byte[] vBytes = encapsulationResult.getV(); // getV() will convert Rq to byte[]
+                        // Extract encapsulated components
+                        byte[] uBytes = encapsulationResult.getU();
+                        byte[] vBytes = encapsulationResult.getV();
                         List<Integer> uList = new ArrayList<>();
                         for (byte b : uBytes) {
                             uList.add((int) b);
@@ -258,10 +246,12 @@ public class chatwindo extends AppCompatActivity {
                         }
 
                         try {
+                            // Encrypt the message using AES
                             String encryptedMessage = AESHelper.encrypt(message, sessionKey, sessionIV);
                             Date date = new Date();
-                            msgModelclass messages = new msgModelclass(encryptedMessage, SenderUID, date.getTime(), uList, vList,message);
-                            //messages.setCipherText(encryptedMessage);
+                            msgModelclass messages = new msgModelclass(encryptedMessage, SenderUID, date.getTime(), uList, vList, message);
+
+                            // Push message to Firebase database
                             database.getReference().child("chats").child(senderRoom).child("messages").push().setValue(messages).addOnCompleteListener(new OnCompleteListener<Void>() {
                                 @Override
                                 public void onComplete(@NonNull Task<Void> task) {
@@ -282,6 +272,7 @@ public class chatwindo extends AppCompatActivity {
         });
     }
 
+    // Retrieve private key from local storage
     private byte[] retrievePrivateKey() {
         SharedPreferences sharedPreferences = getSharedPreferences("KyberKeys", MODE_PRIVATE);
         String privateKeyBase64 = sharedPreferences.getString("KyberPrivateKey", null);
