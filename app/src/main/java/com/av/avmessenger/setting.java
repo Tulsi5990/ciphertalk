@@ -1,173 +1,5 @@
-//package com.av.avmessenger;
-//
-//import androidx.annotation.NonNull;
-//import androidx.annotation.Nullable;
-//import androidx.appcompat.app.AppCompatActivity;
-//
-//import android.content.Intent;
-//import android.net.Uri;
-//import android.os.Bundle;
-//import android.view.View;
-//import android.widget.Button;
-//import android.widget.EditText;
-//import android.widget.ImageView;
-//import android.widget.Toast;
-//
-//import com.google.android.gms.tasks.OnCompleteListener;
-//import com.google.android.gms.tasks.OnSuccessListener;
-//import com.google.android.gms.tasks.Task;
-//import com.google.firebase.auth.FirebaseAuth;
-//import com.google.firebase.database.DataSnapshot;
-//import com.google.firebase.database.DatabaseError;
-//import com.google.firebase.database.DatabaseReference;
-//import com.google.firebase.database.FirebaseDatabase;
-//import com.google.firebase.database.ValueEventListener;
-//import com.google.firebase.storage.FirebaseStorage;
-//import com.google.firebase.storage.StorageReference;
-//import com.google.firebase.storage.UploadTask;
-//import com.squareup.picasso.Picasso;
-//
-//import java.net.URI;
-//import java.net.URL;
-//
-//public class setting extends AppCompatActivity {
-//
-//    ImageView setprofile;
-//    EditText setname, setstatus;
-//    Button donebut;
-//    FirebaseAuth auth;
-//    FirebaseDatabase database;
-//    FirebaseStorage storage;
-//    String email,password;
-//    Uri setImageUri;
-//
-//
-//    @Override
-//    protected void onCreate(Bundle savedInstanceState) {
-//        super.onCreate(savedInstanceState);
-//        setContentView(R.layout.activity_setting);
-//        auth = FirebaseAuth.getInstance();
-//        database = FirebaseDatabase.getInstance();
-//        storage = FirebaseStorage.getInstance();
-//        setprofile = findViewById(R.id.settingprofile);
-//        setname = findViewById(R.id.settingname);
-//        setstatus = findViewById(R.id.settingstatus);
-//        donebut = findViewById(R.id.donebutt);
-//
-//        DatabaseReference reference = database.getReference().child("user").child(auth.getUid());
-//        StorageReference storageReference = storage.getReference().child("upload").child(auth.getUid());
-//        reference.addValueEventListener(new ValueEventListener() {
-//            @Override
-//            public void onDataChange(@NonNull DataSnapshot snapshot) {
-//                email = snapshot.child("mail").getValue().toString();
-//                password = snapshot.child("password").getValue().toString();
-//                String name = snapshot.child("userName").getValue().toString();
-//                String profile = snapshot.child("profilepic").getValue().toString();
-//                String status = snapshot.child("status").getValue().toString();
-//                setname.setText(name);
-//                setstatus.setText(status);
-//                Picasso.get().load(profile).into(setprofile);
-//            }
-//            @Override
-//            public void onCancelled(@NonNull DatabaseError error) {
-//
-//            }
-//        });
-//
-//        setprofile.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                Intent intent = new Intent();
-//                intent.setType("imge/*");
-//                intent.setAction(Intent.ACTION_GET_CONTENT);
-//                startActivityForResult(Intent.createChooser(intent,"Select Picture"), 10);
-//            }
-//        });
-//        donebut.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                String name = setname.getText().toString();
-//                String status = setstatus.getText().toString();
-//                if(setImageUri!=null){
-//                    storageReference.putFile(setImageUri).addOnCompleteListener(new OnCompleteListener<UploadTask.TaskSnapshot>() {
-//                        @Override
-//                        public void onComplete(@NonNull Task<UploadTask.TaskSnapshot> task) {
-//                            storageReference.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
-//                                @Override
-//                                public void onSuccess(Uri uri) {
-//                                    String finalimageUri = uri.toString();
-//                                    Users users = new Users(auth.getUid(), name,email,password,finalimageUri,status);
-//                                    reference.setValue(users).addOnCompleteListener(new OnCompleteListener<Void>() {
-//                                        @Override
-//                                        public void onComplete(@NonNull Task<Void> task) {
-//                                            if (task.isSuccessful()){
-//                                                Toast.makeText(setting.this, "Data Is Save", Toast.LENGTH_SHORT).show();
-//                                                Intent intent = new Intent(setting.this,MainActivity.class);
-//                                                startActivity(intent);
-//                                                finish();
-//                                            }else {
-//                                                Toast.makeText(setting.this, "Some Thing went...", Toast.LENGTH_SHORT).show();
-//                                            }
-//                                        }
-//                                    });
-//                                }
-//                            });
-//                        }
-//                    });
-//                }else {
-//                    storageReference.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
-//                        @Override
-//                        public void onSuccess(Uri uri) {
-//                            String finaImageUri = uri.toString();
-//                            Users users = new Users(auth.getUid(), name, email,password,finaImageUri,status);
-//                            reference.setValue(users).addOnCompleteListener(new OnCompleteListener<Void>() {
-//                                @Override
-//                                public void onComplete(@NonNull Task<Void> task) {
-//                                    if(task.isSuccessful()){
-//                                        Toast.makeText(setting.this, "Data Is Save", Toast.LENGTH_SHORT).show();
-//                                        Intent intent = new Intent(setting.this,MainActivity.class);
-//                                        startActivity(intent);
-//                                        finish();
-//                                    }else {
-//                                        Toast.makeText(setting.this, "Some Thing went...", Toast.LENGTH_SHORT).show();
-//                                    }
-//                                }
-//                            });
-//                        }
-//                    });
-//                }
-//            }
-//        });
-//
-//
-//    }
-//
-//    @Override
-//    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-//        super.onActivityResult(requestCode, resultCode, data);
-//        if (requestCode == 10){
-//            if (data != null){
-//                setImageUri = data.getData();
-//                setprofile.setImageURI(setImageUri);
-//            }
-//
-//        }
-//
-//
-//    }
-//}
-
-
-
-
-
 package com.av.avmessenger;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.appcompat.app.AppCompatActivity;
-
-import android.annotation.SuppressLint;
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.net.Uri;
@@ -175,9 +7,12 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.Toast;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -188,65 +23,77 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
-import com.google.firebase.database.util.GAuthToken;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 import com.squareup.picasso.Picasso;
 
 public class setting extends AppCompatActivity {
-    ImageView setprofile;
-    EditText setname, setstatus;
-    Button donebut;
-    FirebaseAuth auth;
-    FirebaseDatabase database;
-    FirebaseStorage storage;
-    Uri setImageUri;
-    String email,password;
-    ProgressDialog progressDialog;
-
-
+    // Declare UI components and variables
+    ImageView setprofile; // ImageView to display profile picture
+    EditText setname, setstatus; // EditText for user name and status
+    Button donebut; // Button to save changes
+    FirebaseAuth auth; // Firebase Authentication instance
+    FirebaseDatabase database; // Firebase Database instance
+    FirebaseStorage storage; // Firebase Storage instance
+    Uri setImageUri; // URI to hold selected image
+    String email, password; // Variables to hold user email and password
+    ProgressDialog progressDialog; // ProgressDialog to show loading state
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_setting);
-        getSupportActionBar().hide();
+        getSupportActionBar().hide(); // Hide action bar for cleaner UI
+
+        // Initialize Firebase instances
         auth = FirebaseAuth.getInstance();
         database = FirebaseDatabase.getInstance();
         storage = FirebaseStorage.getInstance();
+
+        // Bind UI components to their respective views
         setprofile = findViewById(R.id.settingprofile);
         setname = findViewById(R.id.settingname);
         setstatus = findViewById(R.id.settingstatus);
         donebut = findViewById(R.id.donebutt);
 
+        // Initialize ProgressDialog
         progressDialog = new ProgressDialog(this);
-        progressDialog.setMessage("Saing...");
+        progressDialog.setMessage("Saving...");
         progressDialog.setCancelable(false);
 
+        // Get user data from Firebase Database
         DatabaseReference reference = database.getReference().child("user").child(auth.getUid());
         StorageReference storageReference = storage.getReference().child("upload").child(auth.getUid());
+
+        // Listen for changes in user data
         reference.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
+                // Retrieve user data from Firebase
                 email = snapshot.child("mail").getValue().toString();
                 password = snapshot.child("password").getValue().toString();
                 String name = snapshot.child("userName").getValue().toString();
                 String profile = snapshot.child("profilepic").getValue().toString();
                 String status = snapshot.child("status").getValue().toString();
+
+                // Populate UI with the retrieved user data
                 setname.setText(name);
                 setstatus.setText(status);
-                Picasso.get().load(profile).into(setprofile);
+                Picasso.get().load(profile).into(setprofile); // Use Picasso to load profile image
             }
 
             @Override
             public void onCancelled(@NonNull DatabaseError error) {
-
+                // Handle database error if needed
             }
         });
+
+        // Set up the profile image click listener
         setprofile.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                // Open image picker to select an image
                 Intent intent = new Intent();
                 intent.setType("image/*");
                 intent.setAction(Intent.ACTION_GET_CONTENT);
@@ -254,34 +101,43 @@ public class setting extends AppCompatActivity {
             }
         });
 
+        // Set up the done button click listener to save user data
         donebut.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                progressDialog.show();
+                progressDialog.show(); // Show loading dialog while saving data
 
-                String name = setname.getText().toString();
-                String Status = setstatus.getText().toString();
-                if (setImageUri!=null){
+                String name = setname.getText().toString(); // Get user name from EditText
+                String status = setstatus.getText().toString(); // Get user status from EditText
+
+                // Check if a new profile image was selected
+                if (setImageUri != null) {
+                    // Upload selected image to Firebase Storage
                     storageReference.putFile(setImageUri).addOnCompleteListener(new OnCompleteListener<UploadTask.TaskSnapshot>() {
                         @Override
                         public void onComplete(@NonNull Task<UploadTask.TaskSnapshot> task) {
+                            // On upload success, retrieve the image URL
                             storageReference.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
                                 @Override
                                 public void onSuccess(Uri uri) {
-                                    String finalImageUri = uri.toString();
-                                    Users users = new Users(auth.getUid(), name,email,password,finalImageUri,Status);
+                                    String finalImageUri = uri.toString(); // Get the final image URI
+
+                                    // Create a Users object with updated data
+                                    Users users = new Users(auth.getUid(), name, email, password, finalImageUri, status, "", "");
+                                    // Save the data to Firebase Database
                                     reference.setValue(users).addOnCompleteListener(new OnCompleteListener<Void>() {
                                         @Override
                                         public void onComplete(@NonNull Task<Void> task) {
-                                            if (task.isSuccessful()){
-                                                progressDialog.dismiss();
-                                                Toast.makeText(setting.this, "Data Is save ", Toast.LENGTH_SHORT).show();
-                                                Intent intent = new Intent(setting.this,MainActivity.class);
+                                            // Handle success or failure
+                                            progressDialog.dismiss(); // Hide progress dialog
+                                            if (task.isSuccessful()) {
+                                                Toast.makeText(setting.this, "Data Saved", Toast.LENGTH_SHORT).show();
+                                                // Redirect to MainActivity
+                                                Intent intent = new Intent(setting.this, MainActivity.class);
                                                 startActivity(intent);
                                                 finish();
-                                            }else {
-                                                progressDialog.dismiss();
-                                                Toast.makeText(setting.this, "Some thing went romg", Toast.LENGTH_SHORT).show();
+                                            } else {
+                                                Toast.makeText(setting.this, "Something went wrong", Toast.LENGTH_SHORT).show();
                                             }
                                         }
                                     });
@@ -289,44 +145,47 @@ public class setting extends AppCompatActivity {
                             });
                         }
                     });
-                }else {
+                } else {
+                    // If no new image, just use the existing one
                     storageReference.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
                         @Override
                         public void onSuccess(Uri uri) {
-                            String finalImageUri = uri.toString();
-                            Users users = new Users(auth.getUid(), name,email,password,finalImageUri,Status);
+                            String finalImageUri = uri.toString(); // Get the existing image URI
+                            // Create a Users object with updated data
+                            Users users = new Users(auth.getUid(), name, email, password, finalImageUri, status, "", "");
+                            // Save the data to Firebase Database
                             reference.setValue(users).addOnCompleteListener(new OnCompleteListener<Void>() {
                                 @Override
                                 public void onComplete(@NonNull Task<Void> task) {
-                                    if (task.isSuccessful()){
-                                        progressDialog.dismiss();
-                                        Toast.makeText(setting.this, "Data Is save ", Toast.LENGTH_SHORT).show();
-                                        Intent intent = new Intent(setting.this,MainActivity.class);
+                                    // Handle success or failure
+                                    progressDialog.dismiss(); // Hide progress dialog
+                                    if (task.isSuccessful()) {
+                                        Toast.makeText(setting.this, "Data Saved", Toast.LENGTH_SHORT).show();
+                                        // Redirect to MainActivity
+                                        Intent intent = new Intent(setting.this, MainActivity.class);
                                         startActivity(intent);
                                         finish();
-                                    }else {
-                                        progressDialog.dismiss();
-                                        Toast.makeText(setting.this, "Some thing went romg", Toast.LENGTH_SHORT).show();
+                                    } else {
+                                        Toast.makeText(setting.this, "Something went wrong", Toast.LENGTH_SHORT).show();
                                     }
                                 }
                             });
                         }
                     });
                 }
-
             }
         });
     }
 
+    // Handle image selection result from the gallery
+    @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == 10) {
             if (data != null) {
-                setImageUri = data.getData();
-                setprofile.setImageURI(setImageUri);
+                setImageUri = data.getData(); // Get the selected image URI
+                setprofile.setImageURI(setImageUri); // Set the selected image to the ImageView
             }
         }
-
-
     }
 }
